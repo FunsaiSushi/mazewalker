@@ -321,6 +321,7 @@ const MainContent = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
   const [showFinalExit, setShowFinalExit] = useState(false);
+  const [showTrails, setShowTrails] = useState(true);
   const [bestTime, setBestTime] = useState<number | null>(null);
 
   const MAZE_SIZE = 11;
@@ -618,7 +619,13 @@ const MainContent = () => {
       case "checkpoint":
         return isDark ? "bg-yellow-300" : "bg-yellow-400";
       case "explored":
-        return isDark ? "bg-blue-300" : "bg-blue-200";
+        return showTrails
+          ? isDark
+            ? "bg-blue-300"
+            : "bg-blue-200"
+          : isDark
+          ? "bg-gray-500"
+          : "bg-gray-200";
       case "unexplored":
         return isDark ? "bg-gray-600" : "bg-gray-300";
       default:
@@ -653,31 +660,29 @@ const MainContent = () => {
         }`}
       >
         {/* Buttons Row */}
-        {gameStarted && !gameWon && (
-          <div className="flex justify-between w-full">
-            <button
-              onClick={() => setShowInstructions(true)}
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-indigo-600 transition-colors cursor-pointer"
-            >
-              <FaInfoCircle className="h-5 w-5" />
-              <span>Menu</span>
-            </button>
-            <button
-              onClick={toggleTheme}
-              className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center ${
-                isDark
-                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-yellow-200 hover:from-indigo-700 hover:to-purple-700"
-                  : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
-              } transition-colors cursor-pointer`}
-            >
-              {isDark ? (
-                <FiSun className="h-5 w-5" />
-              ) : (
-                <FiMoon className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-        )}
+        <div className="flex justify-between w-full">
+          <button
+            onClick={() => setShowInstructions(true)}
+            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 hover:from-blue-600 hover:to-indigo-600 transition-colors cursor-pointer"
+          >
+            <FaInfoCircle className="h-5 w-5" />
+            <span>Menu</span>
+          </button>
+          <button
+            onClick={toggleTheme}
+            className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center ${
+              isDark
+                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-yellow-200 hover:from-indigo-700 hover:to-purple-700"
+                : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+            } transition-colors cursor-pointer`}
+          >
+            {isDark ? (
+              <FiSun className="h-5 w-5" />
+            ) : (
+              <FiMoon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
 
         {/* Game Elements Row */}
         <div className="flex flex-col md:flex-row gap-8 items-stretch flex-1 w-full">
@@ -692,22 +697,34 @@ const MainContent = () => {
             >
               <div className="flex justify-between items-center w-full mb-4">
                 <h2
-                  className={`text-lg sm:text-xl font-bold ${
+                  className={`text-lg sm:text-xl font-bold mr-4 ${
                     isDark ? "text-gray-100" : "text-gray-800"
                   }`}
                 >
                   Minimap
                 </h2>
-                <button
-                  onClick={() => setShowFinalExit(!showFinalExit)}
-                  className={`cursor-pointer px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
-                    showFinalExit
-                      ? "bg-green-100 text-green-800 hover:bg-green-200"
-                      : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                  }`}
-                >
-                  {showFinalExit ? "Hide Exit" : "Show Exit"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowTrails(!showTrails)}
+                    className={`cursor-pointer px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
+                      showTrails
+                        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    }`}
+                  >
+                    {showTrails ? "Hide Trails" : "Show Trails"}
+                  </button>
+                  <button
+                    onClick={() => setShowFinalExit(!showFinalExit)}
+                    className={`cursor-pointer px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
+                      showFinalExit
+                        ? "bg-green-100 text-green-800 hover:bg-green-200"
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    }`}
+                  >
+                    {showFinalExit ? "Hide Exit" : "Show Exit"}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-5 gap-1 sm:gap-2 w-fit">
                 {allMazes.map((row, rowIndex) =>
@@ -716,11 +733,12 @@ const MainContent = () => {
                       key={`${rowIndex}-${colIndex}`}
                       className={`w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 rounded-lg border-2 transition-colors ${
                         currentMazePos.row === rowIndex &&
-                        currentMazePos.col === colIndex
+                        currentMazePos.col === colIndex &&
+                        showTrails
                           ? isDark
                             ? "border-blue-400 bg-blue-900"
                             : "border-blue-500 bg-blue-100"
-                          : maze.explored
+                          : maze.explored && showTrails
                           ? isDark
                             ? "border-gray-500 bg-gray-700"
                             : "border-gray-400 bg-gray-100"
@@ -743,26 +761,30 @@ const MainContent = () => {
                   isDark ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                  <div
-                    className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded ${
-                      isDark
-                        ? "bg-blue-900 border-2 border-blue-400"
-                        : "bg-blue-100 border-2 border-blue-500"
-                    }`}
-                  ></div>
-                  <span>Current Maze</span>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                  <div
-                    className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded ${
-                      isDark
-                        ? "bg-gray-700 border-2 border-gray-500"
-                        : "bg-gray-100 border-2 border-gray-400"
-                    }`}
-                  ></div>
-                  <span>Explored</span>
-                </div>
+                {showTrails && (
+                  <>
+                    <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                      <div
+                        className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded ${
+                          isDark
+                            ? "bg-blue-900 border-2 border-blue-400"
+                            : "bg-blue-100 border-2 border-blue-500"
+                        }`}
+                      ></div>
+                      <span>Current Maze</span>
+                    </div>
+                    <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                      <div
+                        className={`w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded ${
+                          isDark
+                            ? "bg-gray-700 border-2 border-gray-500"
+                            : "bg-gray-100 border-2 border-gray-400"
+                        }`}
+                      ></div>
+                      <span>Explored</span>
+                    </div>
+                  </>
+                )}
                 {showFinalExit && (
                   <div className="flex items-center gap-1 sm:gap-2">
                     <div
