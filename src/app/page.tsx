@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useContext,
-  createContext,
-  ReactNode,
-} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FaInfoCircle,
@@ -17,12 +10,7 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import { FiMoon, FiSun } from "react-icons/fi";
-import { Chakra_Petch } from "next/font/google";
-
-const chakraPetch = Chakra_Petch({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
 // Types for our maze cells
 type CellType =
@@ -318,59 +306,8 @@ const generateAllMazes = (): MazeState[][] => {
   return mazes;
 };
 
-interface ThemeContextType {
-  isDark: boolean;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    // Check localStorage first
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme");
-      // If there's no saved theme, default to light theme
-      if (!savedTheme) {
-        localStorage.setItem("theme", "light");
-        return false;
-      }
-      return savedTheme === "dark";
-    }
-    // Default to light theme if window is not available (SSR)
-    return false;
-  });
-
-  useEffect(() => {
-    // Update localStorage when theme changes
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-    // Update document class for system-wide theme awareness
-    document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
-
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev);
-  };
-
-  return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
-};
-
 const MainContent = () => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, isInitialized } = useTheme();
 
   const [allMazes, setAllMazes] = useState<MazeState[][]>([]);
   const [currentMazePos, setCurrentMazePos] = useState<Position>({
@@ -454,21 +391,21 @@ const MainContent = () => {
     setGameStarted(false);
     setGameWon(false);
     setTime(0);
-    setShowInstructions(true);
+    setShowInstructions(false);
   }, []);
 
-  const getAdjacentMazePosition = (
-    currentPos: Position,
-    exitPos: Position
-  ): Position => {
-    if (exitPos.row === 0)
-      return { row: currentPos.row - 1, col: currentPos.col }; // top exit
-    if (exitPos.row === MAZE_SIZE - 1)
-      return { row: currentPos.row + 1, col: currentPos.col }; // bottom exit
-    if (exitPos.col === 0)
-      return { row: currentPos.row, col: currentPos.col - 1 }; // left exit
-    return { row: currentPos.row, col: currentPos.col + 1 }; // right exit
-  };
+  const getAdjacentMazePosition = useCallback(
+    (currentPos: Position, exitPos: Position): Position => {
+      if (exitPos.row === 0)
+        return { row: currentPos.row - 1, col: currentPos.col }; // top exit
+      if (exitPos.row === MAZE_SIZE - 1)
+        return { row: currentPos.row + 1, col: currentPos.col }; // bottom exit
+      if (exitPos.col === 0)
+        return { row: currentPos.row, col: currentPos.col - 1 }; // left exit
+      return { row: currentPos.row, col: currentPos.col + 1 }; // right exit
+    },
+    []
+  );
 
   const handleMazeTransition = useCallback(
     (newMazePos: Position) => {
@@ -532,48 +469,6 @@ const MainContent = () => {
       setCurrentMazePos(newMazePos);
     },
     [currentMazePos]
-  );
-
-  // Handle keyboard controls
-  const handleKeyPress = useCallback(
-    (event: KeyboardEvent) => {
-      if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(
-          event.code
-        )
-      ) {
-        event.preventDefault();
-      }
-
-      handleMovement(event.code);
-    },
-    [
-      playerPos,
-      allMazes,
-      currentMazePos,
-      gameStarted,
-      gameWon,
-      isMoving,
-      handleRestart,
-      handleMazeTransition,
-    ]
-  );
-
-  // Separate handler for on-screen buttons
-  const handleButtonPress = useCallback(
-    (code: string) => {
-      handleMovement(code);
-    },
-    [
-      playerPos,
-      allMazes,
-      currentMazePos,
-      gameStarted,
-      gameWon,
-      isMoving,
-      handleRestart,
-      handleMazeTransition,
-    ]
   );
 
   // Common movement logic
@@ -679,6 +574,30 @@ const MainContent = () => {
     ]
   );
 
+  // Handle keyboard controls
+  const handleKeyPress = useCallback(
+    (event: KeyboardEvent) => {
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(
+          event.code
+        )
+      ) {
+        event.preventDefault();
+      }
+
+      handleMovement(event.code);
+    },
+    [handleMovement]
+  );
+
+  // Separate handler for on-screen buttons
+  const handleButtonPress = useCallback(
+    (code: string) => {
+      handleMovement(code);
+    },
+    [handleMovement]
+  );
+
   useEffect(() => {
     window.addEventListener("keydown", handleKeyPress, { capture: true });
     return () => {
@@ -691,7 +610,7 @@ const MainContent = () => {
       case "wall":
         return isDark ? "bg-gray-700" : "bg-gray-800";
       case "path":
-        return isDark ? "bg-gray-600" : "bg-gray-200";
+        return isDark ? "bg-gray-500" : "bg-gray-200";
       case "player":
         return isDark ? "bg-blue-400" : "bg-blue-500";
       case "exit":
@@ -701,9 +620,9 @@ const MainContent = () => {
       case "explored":
         return isDark ? "bg-blue-300" : "bg-blue-200";
       case "unexplored":
-        return isDark ? "bg-gray-500" : "bg-gray-300";
+        return isDark ? "bg-gray-600" : "bg-gray-300";
       default:
-        return isDark ? "bg-gray-500" : "bg-gray-300";
+        return isDark ? "bg-gray-600" : "bg-gray-300";
     }
   };
 
@@ -715,9 +634,13 @@ const MainContent = () => {
       .padStart(2, "0")}`;
   };
 
+  if (!isInitialized) {
+    return null;
+  }
+
   return (
     <div
-      className={`${chakraPetch.className} min-h-screen ${
+      className={`min-h-screen ${
         isDark
           ? "bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900"
           : "bg-gradient-to-br from-white via-green-50 to-green-100"
@@ -741,7 +664,7 @@ const MainContent = () => {
             </button>
             <button
               onClick={toggleTheme}
-              className={`p-2 rounded-lg shadow-lg flex items-center justify-center ${
+              className={`w-10 h-10 rounded-full shadow-lg flex items-center justify-center ${
                 isDark
                   ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-yellow-200 hover:from-indigo-700 hover:to-purple-700"
                   : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
@@ -1034,7 +957,13 @@ const MainContent = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-0 bg-gradient-to-br from-white to-purple-50 bg-opacity-95 z-50 flex items-center justify-center p-4 md:absolute md:top-4 md:left-4 md:inset-auto md:max-w-md md:rounded-lg md:shadow-lg border border-purple-100"
+          className={`fixed inset-0 ${
+            isDark
+              ? "bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900"
+              : "bg-gradient-to-br from-white to-purple-50"
+          } bg-opacity-95 z-50 flex items-center justify-center p-4 md:absolute md:top-4 md:left-4 md:inset-auto md:max-w-md md:rounded-lg md:shadow-lg border ${
+            isDark ? "border-indigo-700" : "border-purple-100"
+          }`}
         >
           <div className="max-w-md w-full">
             <h2
@@ -1074,7 +1003,11 @@ const MainContent = () => {
               {gameStarted && (
                 <button
                   onClick={() => setShowInstructions(false)}
-                  className="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-6 py-3 rounded-lg text-lg font-semibold hover:from-gray-200 hover:to-gray-300 transition-colors cursor-pointer"
+                  className={`px-6 py-3 rounded-lg text-lg font-semibold transition-colors cursor-pointer ${
+                    isDark
+                      ? "bg-gradient-to-r from-gray-700 to-gray-800 text-gray-300 hover:from-gray-600 hover:to-gray-700"
+                      : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 hover:from-gray-200 hover:to-gray-300"
+                  }`}
                 >
                   Back to Game
                 </button>
