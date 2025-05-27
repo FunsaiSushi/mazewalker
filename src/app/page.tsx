@@ -320,7 +320,7 @@ const MainContent = () => {
   const [gameWon, setGameWon] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [isMoving, setIsMoving] = useState(false);
-  const [showFinalExit, setShowFinalExit] = useState(true);
+  const [showFinalExit, setShowFinalExit] = useState(false);
   const [bestTime, setBestTime] = useState<number | null>(null);
 
   const MAZE_SIZE = 11;
