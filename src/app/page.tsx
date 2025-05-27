@@ -857,36 +857,31 @@ const MainContent = () => {
               )}
 
             {/* Mobile Controls */}
-            <div className="md:hidden mt-6 grid grid-cols-3 gap-4 max-w-[300px] mx-auto">
-              <div></div>
-              <button
-                onClick={() => handleButtonPress("ArrowUp")}
-                className="bg-blue-500 text-white p-4 rounded-lg shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
-              >
-                <FaArrowUp className="h-6 w-6" />
-              </button>
-              <div></div>
+            <div className="md:hidden mt-6 flex justify-center gap-4 max-w-[300px] mx-auto">
               <button
                 onClick={() => handleButtonPress("ArrowLeft")}
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
               >
                 <FaArrowLeft className="h-6 w-6" />
               </button>
-              <div></div>
               <button
-                onClick={() => handleButtonPress("ArrowRight")}
+                onClick={() => handleButtonPress("ArrowUp")}
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
               >
-                <FaArrowRight className="h-6 w-6" />
+                <FaArrowUp className="h-6 w-6" />
               </button>
-              <div></div>
               <button
                 onClick={() => handleButtonPress("ArrowDown")}
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
               >
                 <FaArrowDown className="h-6 w-6" />
               </button>
-              <div></div>
+              <button
+                onClick={() => handleButtonPress("ArrowRight")}
+                className="bg-blue-500 text-white p-4 rounded-lg shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+              >
+                <FaArrowRight className="h-6 w-6" />
+              </button>
             </div>
 
             {/* Game Won Modal */}
